@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import os
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
 from focusflow.models import Task, TaskPriority, TaskStatus, User
-from focusflow.mysql_persistence import Base, SqlAlchemyContext, SqlTaskRepository, SqlUserRepository
+from focusflow.mysql_persistence import (
+    Base,
+    SqlAlchemyContext,
+    SqlReminderRepository,
+    SqlTaskRepository,
+    SqlUserRepository,
+)
 
 pytestmark = pytest.mark.mysql
 
@@ -74,3 +80,41 @@ def test_sql_task_repository_crud(mysql_context: SqlAlchemyContext) -> None:
 
     repo.delete("task-1")
     assert repo.get_by_id("task-1") is None
+
+
+def test_sql_reminder_repository_roundtrip(mysql_context: SqlAlchemyContext) -> None:
+    task_repo = SqlTaskRepository(mysql_context)
+    reminder_repo = SqlReminderRepository(mysql_context)
+
+    task = Task(
+        task_id="task-for-reminder",
+        user_id="user-1",
+        title="Reminder parent",
+        due_date=date.today() + timedelta(days=1),
+        description="",
+        priority=TaskPriority.MEDIUM,
+        status=TaskStatus.NOT_STARTED,
+        created_at=datetime.now(timezone.utc),
+    )
+    task_repo.save(task)
+
+    from focusflow.models import Reminder
+
+    reminder = Reminder(
+        reminder_id="reminder-1",
+        task_id=task.task_id,
+        remind_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        message="Test reminder",
+    )
+
+    saved = reminder_repo.save(reminder)
+    fetched = reminder_repo.get_by_id(saved.reminder_id)
+
+    assert fetched is not None
+    assert fetched.message == "Test reminder"
+
+    all_items = reminder_repo.list_all()
+    assert len(all_items) == 1
+
+    reminder_repo.delete(saved.reminder_id)
+    assert reminder_repo.get_by_id(saved.reminder_id) is None

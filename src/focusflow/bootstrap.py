@@ -9,8 +9,9 @@ from pathlib import Path
 from sqlalchemy.exc import SQLAlchemyError
 
 from .auth import AuthService
-from .mysql_persistence import SqlAlchemyContext, SqlTaskRepository, SqlUserRepository
-from .repositories import InMemoryTaskRepository, InMemoryUserRepository
+from .mysql_persistence import SqlAlchemyContext, SqlReminderRepository, SqlTaskRepository, SqlUserRepository
+from .reminder_manager import ReminderManager
+from .repositories import InMemoryReminderRepository, InMemoryTaskRepository, InMemoryUserRepository
 from .task_manager import TaskManager
 
 
@@ -18,6 +19,7 @@ from .task_manager import TaskManager
 class ServiceBundle:
     auth: AuthService
     tasks: TaskManager
+    reminders: ReminderManager
     backend_name: str
 
 
@@ -39,16 +41,23 @@ def create_service_bundle(
         context.create_schema()
         user_repo = SqlUserRepository(context)
         task_repo = SqlTaskRepository(context)
+        reminder_repo = SqlReminderRepository(context)
         return ServiceBundle(
             auth=AuthService(user_repository=user_repo),
             tasks=TaskManager(task_repository=task_repo),
+            reminders=ReminderManager(reminder_repository=reminder_repo, task_repository=task_repo),
             backend_name=resolved_url,
         )
     except SQLAlchemyError:
         if not fallback_to_in_memory:
             raise
+        task_repo = InMemoryTaskRepository()
         return ServiceBundle(
             auth=AuthService(user_repository=InMemoryUserRepository()),
-            tasks=TaskManager(task_repository=InMemoryTaskRepository()),
+            tasks=TaskManager(task_repository=task_repo),
+            reminders=ReminderManager(
+                reminder_repository=InMemoryReminderRepository(),
+                task_repository=task_repo,
+            ),
             backend_name="in-memory",
         )

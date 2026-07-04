@@ -45,3 +45,12 @@ class Task:
     started_at: datetime | None = None
     completed_at: datetime | None = None
     total_minutes_spent: int = 0
+
+
+@dataclass(slots=True)
+class Reminder:
+    task_id: str
+    remind_at: datetime
+    message: str
+    is_acknowledged: bool = False
+    reminder_id: str = field(default_factory=lambda: str(uuid4()))

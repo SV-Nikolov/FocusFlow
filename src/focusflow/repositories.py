@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Protocol
 
-from .models import Task, User
+from .models import Reminder, Task, User
 
 
 class UserRepository(Protocol):
@@ -18,6 +18,13 @@ class TaskRepository(Protocol):
     def save(self, task: Task) -> Task: ...
     def delete(self, task_id: str) -> None: ...
     def list_all(self) -> list[Task]: ...
+
+
+class ReminderRepository(Protocol):
+    def get_by_id(self, reminder_id: str) -> Reminder | None: ...
+    def save(self, reminder: Reminder) -> Reminder: ...
+    def delete(self, reminder_id: str) -> None: ...
+    def list_all(self) -> list[Reminder]: ...
 
 
 class InMemoryUserRepository(UserRepository):
@@ -50,3 +57,22 @@ class InMemoryTaskRepository(TaskRepository):
 
     def list_all(self) -> list[Task]:
         return [replace(task) for task in self._tasks_by_id.values()]
+
+
+class InMemoryReminderRepository(ReminderRepository):
+    def __init__(self) -> None:
+        self._reminders_by_id: dict[str, Reminder] = {}
+
+    def get_by_id(self, reminder_id: str) -> Reminder | None:
+        reminder = self._reminders_by_id.get(reminder_id)
+        return replace(reminder) if reminder is not None else None
+
+    def save(self, reminder: Reminder) -> Reminder:
+        self._reminders_by_id[reminder.reminder_id] = replace(reminder)
+        return replace(reminder)
+
+    def delete(self, reminder_id: str) -> None:
+        self._reminders_by_id.pop(reminder_id, None)
+
+    def list_all(self) -> list[Reminder]:
+        return [replace(reminder) for reminder in self._reminders_by_id.values()]

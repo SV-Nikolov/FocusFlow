@@ -8,8 +8,8 @@ from datetime import date, datetime
 from sqlalchemy import Date, DateTime, Integer, String, Text, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
-from .models import Task, TaskPriority, TaskStatus, User
-from .repositories import TaskRepository, UserRepository
+from .models import Reminder, Task, TaskPriority, TaskStatus, User
+from .repositories import ReminderRepository, TaskRepository, UserRepository
 
 
 class Base(DeclarativeBase):
@@ -41,6 +41,16 @@ class TaskRow(Base):
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     total_minutes_spent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class ReminderRow(Base):
+    __tablename__ = "reminders"
+
+    reminder_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    task_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    remind_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    is_acknowledged: Mapped[bool] = mapped_column(nullable=False, default=False)
 
 
 @dataclass(slots=True)
@@ -135,6 +145,41 @@ class SqlTaskRepository(TaskRepository):
             return [_task_from_row(row) for row in rows]
 
 
+class SqlReminderRepository(ReminderRepository):
+    def __init__(self, context: SqlAlchemyContext) -> None:
+        self._context = context
+
+    def get_by_id(self, reminder_id: str) -> Reminder | None:
+        with self._context.session() as session:
+            row = session.get(ReminderRow, reminder_id)
+            return _reminder_from_row(row) if row is not None else None
+
+    def save(self, reminder: Reminder) -> Reminder:
+        with self._context.session() as session:
+            row = session.get(ReminderRow, reminder.reminder_id)
+            if row is None:
+                row = ReminderRow(reminder_id=reminder.reminder_id)
+                session.add(row)
+            row.task_id = reminder.task_id
+            row.remind_at = reminder.remind_at
+            row.message = reminder.message
+            row.is_acknowledged = reminder.is_acknowledged
+            session.commit()
+            return _reminder_from_row(row)
+
+    def delete(self, reminder_id: str) -> None:
+        with self._context.session() as session:
+            row = session.get(ReminderRow, reminder_id)
+            if row is not None:
+                session.delete(row)
+                session.commit()
+
+    def list_all(self) -> list[Reminder]:
+        with self._context.session() as session:
+            rows = session.scalars(select(ReminderRow)).all()
+            return [_reminder_from_row(row) for row in rows]
+
+
 def _user_from_row(row: UserRow) -> User:
     return User(
         user_id=row.user_id,
@@ -159,4 +204,14 @@ def _task_from_row(row: TaskRow) -> Task:
         started_at=row.started_at,
         completed_at=row.completed_at,
         total_minutes_spent=row.total_minutes_spent,
+    )
+
+
+def _reminder_from_row(row: ReminderRow) -> Reminder:
+    return Reminder(
+        reminder_id=row.reminder_id,
+        task_id=row.task_id,
+        remind_at=row.remind_at,
+        message=row.message,
+        is_acknowledged=row.is_acknowledged,
     )
