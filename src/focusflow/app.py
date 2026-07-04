@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass
 from datetime import date
 
 from PySide6.QtCore import QDate, Qt
@@ -29,16 +28,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .auth import AuthService
+from .bootstrap import ServiceBundle, create_service_bundle
 from .exceptions import FocusFlowError
 from .models import TaskPriority, TaskStatus, User
-from .task_manager import TaskManager
-
-
-@dataclass(slots=True)
-class AppServices:
-    auth: AuthService
-    tasks: TaskManager
 
 
 STATUS_FILTER_OPTIONS = [
@@ -70,7 +62,7 @@ def _status_from_text(status_text: str) -> TaskStatus:
 
 
 class FocusFlowWindow(QMainWindow):
-    def __init__(self, services: AppServices) -> None:
+    def __init__(self, services: ServiceBundle) -> None:
         super().__init__()
         self._services = services
         self._current_user: User | None = None
@@ -166,7 +158,7 @@ class FocusFlowWindow(QMainWindow):
 
         title = QLabel("FocusFlow")
         title.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
-        subtitle = QLabel("Task dashboard")
+        subtitle = QLabel(f"Task dashboard | Backend: {self._services.backend_name}")
         subtitle.setStyleSheet("color: #555;")
 
         top_actions = QHBoxLayout()
@@ -473,7 +465,7 @@ class FocusFlowWindow(QMainWindow):
 
 def main() -> int:
     app = QApplication(sys.argv)
-    services = AppServices(auth=AuthService(), tasks=TaskManager())
+    services = create_service_bundle()
     window = FocusFlowWindow(services)
     window.show()
     return app.exec()
