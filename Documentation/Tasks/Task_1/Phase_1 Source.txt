@@ -1,0 +1,22 @@
+Phase I Source Code Outline:
+
+Phase I Source Code should lay the foundation for the capstone project's software development. It should encompass the following key elements:
+
+Project Setup: Establish the project's development environment, including setting up coding tools, libraries, and dependencies.
+Core Functionality: Implement the initial core functionalities of the project, focusing on essential features and algorithms.
+Unit Testing: Implement unit tests to verify the correctness and robustness of individual code modules.
+Documentation: Document the code using comments, code blocks, and external documentation files to enhance readability and maintainability.
+Collaboration and Implementation
+
+Within the assigned groups, collaborate on the implementation of Phase I Source Code, ensuring adherence to project specifications, coding standards, and best practices.
+Utilize code review processes to identify and address potential issues, inconsistencies, or inefficiencies within the codebase.
+Employ version control systems to track changes, manage multiple contributors, and ensure code integrity.
+Continuously test and refine the code, addressing any bugs or errors promptly to maintain code quality and stability.
+
+Guidelines for the format and submission of the paper are as follows:
+
+The paper should be 7-9 pages of text in length. (This minimum and maximum length should not include the title page, separate figures and tables, or the list of references);
+The paper should include a cover page containing the project's title and the names of project team members. All team members should submit the same document to the assignment submission area.
+Careful attention should be given to source citations, and a proper listing of references.
+The paper should be well formatted and well organized with proper formatting of all graphs, images, tables etc.
+The students should submit their original work. Work prepared for other courses or use of material obtained for this course from other students, past or present, is expressly prohibited and can result in a grade of zero for an assignment and/or course failure.
