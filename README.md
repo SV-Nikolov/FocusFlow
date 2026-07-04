@@ -206,7 +206,7 @@ Microsoft Teams, Discord, or Zoom for communication
 Google Docs or Microsoft 365 for shared documentation
 Current Status
 
-Project planning is currently in progress. The team is defining the project scope, major features, technology stack, database structure, and development responsibilities.
+The project now has a working baseline desktop application and a reorganized repository structure for implementation and course deliverables.
 
 Working Baseline Application
 
@@ -258,3 +258,18 @@ Notes:
 
 - The packaging script installs dependencies, clears previous build artifacts, and runs PyInstaller in windowed mode.
 - Use the optional AppName parameter to generate a different executable name.
+
+Repository Organization
+
+- `src/focusflow/`: application source code.
+- `tests/`: unit and integration tests.
+- `scripts/`: automation scripts (build, integration test helper, document generation).
+- `Documentation/Project/`: project-level planning and design documents.
+- `Documentation/Tasks/Task_1/Resources/`: Task 1 template, instructions, and grading rubric.
+- `Documentation/Tasks/Task_1/Submissions/`: Task 1 draft and final submission artifacts.
+
+Task 1 Final Report
+
+The final Phase I submission document is generated as an actual DOCX file at:
+
+`Documentation/Tasks/Task_1/Submissions/Phase_1_Source_Report_Final.docx`

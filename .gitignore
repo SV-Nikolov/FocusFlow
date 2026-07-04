@@ -5,3 +5,6 @@ __pycache__/
 .venv/
 .env
 focusflow.db
+build/
+dist/
+*.spec
