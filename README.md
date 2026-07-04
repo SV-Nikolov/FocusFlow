@@ -207,3 +207,34 @@ Google Docs or Microsoft 365 for shared documentation
 Current Status
 
 Project planning is currently in progress. The team is defining the project scope, major features, technology stack, database structure, and development responsibilities.
+
+Working Baseline Application
+
+The repository now includes a working desktop baseline application with:
+
+- Account registration and login
+- Task creation, editing, deletion, and status transitions
+- Dashboard metrics (total, active, completed, overdue)
+- Upcoming reminders list based on due dates
+- Label and completion-rate summary panel
+
+How to Run
+
+1. Install dependencies:
+
+	python -m pip install -r requirements.txt
+
+2. Run the app from the repository root:
+
+	set PYTHONPATH=src
+	python -m focusflow
+
+Persistence
+
+- By default, the app uses a local SQLite database file named focusflow.db in the repository root.
+- You can override the database connection by setting FOCUSFLOW_DB_URL before launch.
+- If a configured database is unavailable, the app falls back to in-memory mode.
+
+Example MySQL connection environment variable:
+
+FOCUSFLOW_DB_URL=mysql+mysqlconnector://focusflow:focusflowpass@127.0.0.1:3307/focusflow_test

@@ -204,6 +204,10 @@ class FocusFlowWindow(QMainWindow):
         actions = QHBoxLayout()
         add_button = QPushButton("Add Task")
         add_button.clicked.connect(self._on_add_task_clicked)
+        load_button = QPushButton("Load")
+        load_button.clicked.connect(self._on_load_selected_clicked)
+        save_button = QPushButton("Save Changes")
+        save_button.clicked.connect(self._on_save_changes_clicked)
         start_button = QPushButton("Start")
         start_button.clicked.connect(lambda: self._transition_selected(TaskStatus.IN_PROGRESS))
         pause_button = QPushButton("Pause")
@@ -216,6 +220,8 @@ class FocusFlowWindow(QMainWindow):
         refresh_button.clicked.connect(self.refresh_view)
 
         actions.addWidget(add_button)
+        actions.addWidget(load_button)
+        actions.addWidget(save_button)
         actions.addWidget(start_button)
         actions.addWidget(pause_button)
         actions.addWidget(complete_button)
@@ -242,6 +248,10 @@ class FocusFlowWindow(QMainWindow):
         form_layout.addRow("Priority", self._priority_input)
         form_layout.addRow("Description", self._description_input)
         task_form.layout().addLayout(form_layout)
+
+        clear_form_button = QPushButton("Clear Form")
+        clear_form_button.clicked.connect(self._clear_form)
+        task_form.layout().addWidget(clear_form_button)
 
         reminder_panel = self._panel("Upcoming Reminders")
         self._reminder_list = QListWidget()
@@ -378,6 +388,74 @@ class FocusFlowWindow(QMainWindow):
         self._label_input.clear()
         self._description_input.clear()
         self.refresh_view()
+
+    def _on_load_selected_clicked(self) -> None:
+        if self._current_user is None:
+            return
+        task_id = self._selected_task_id()
+        if task_id is None:
+            self._show_error("Select a task first.")
+            return
+        try:
+            task = self._services.tasks.get_task(task_id=task_id, user_id=self._current_user.user_id)
+        except FocusFlowError as exc:
+            self._show_error(str(exc))
+            return
+        if (
+            self._title_input is None
+            or self._label_input is None
+            or self._due_date_input is None
+            or self._priority_input is None
+            or self._description_input is None
+        ):
+            return
+        self._title_input.setText(task.title)
+        self._label_input.setText(task.label or "")
+        self._due_date_input.setDate(QDate(task.due_date.year, task.due_date.month, task.due_date.day))
+        self._priority_input.setCurrentText(task.priority.value)
+        self._description_input.setPlainText(task.description)
+
+    def _on_save_changes_clicked(self) -> None:
+        if self._current_user is None:
+            return
+        task_id = self._selected_task_id()
+        if task_id is None:
+            self._show_error("Select a task first.")
+            return
+        if (
+            self._title_input is None
+            or self._label_input is None
+            or self._due_date_input is None
+            or self._priority_input is None
+            or self._description_input is None
+        ):
+            return
+        try:
+            self._services.tasks.update_task(
+                task_id=task_id,
+                user_id=self._current_user.user_id,
+                title=self._title_input.text().strip(),
+                label=self._label_input.text().strip() or None,
+                due_date=self._due_date_input.date().toPython(),
+                priority=_priority_from_text(self._priority_input.currentText()),
+                description=self._description_input.toPlainText().strip(),
+            )
+        except FocusFlowError as exc:
+            self._show_error(str(exc))
+            return
+        self.refresh_view()
+
+    def _clear_form(self) -> None:
+        if self._title_input is not None:
+            self._title_input.clear()
+        if self._label_input is not None:
+            self._label_input.clear()
+        if self._description_input is not None:
+            self._description_input.clear()
+        if self._priority_input is not None:
+            self._priority_input.setCurrentText(TaskPriority.MEDIUM.value)
+        if self._due_date_input is not None:
+            self._due_date_input.setDate(QDate.currentDate())
 
     def _on_delete_task_clicked(self) -> None:
         if self._current_user is None:
