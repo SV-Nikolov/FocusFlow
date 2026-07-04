@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: focusflow-mysql-test
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: focusflow_test
+      MYSQL_USER: focusflow
+      MYSQL_PASSWORD: focusflowpass
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
