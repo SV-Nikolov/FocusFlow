@@ -214,8 +214,10 @@ The repository now includes a working desktop baseline application with:
 
 - Account registration and login
 - Task creation, editing, deletion, and status transitions
+- Calendar tab showing tasks by selected date
+- Reminder tab with create, update, acknowledge, and delete actions
 - Dashboard metrics (total, active, completed, overdue)
-- Upcoming reminders list based on due dates
+- Professional tabbed desktop UI with organized forms and panels
 - Label and completion-rate summary panel
 
 How to Run
@@ -238,3 +240,21 @@ Persistence
 Example MySQL connection environment variable:
 
 FOCUSFLOW_DB_URL=mysql+mysqlconnector://focusflow:focusflowpass@127.0.0.1:3307/focusflow_test
+
+Windows Packaging
+
+To build a Windows executable:
+
+1. Open PowerShell in the repository root.
+2. Run:
+
+	powershell -ExecutionPolicy Bypass -File scripts/build_windows.ps1
+
+3. Find the packaged app at:
+
+	dist/FocusFlow/
+
+Notes:
+
+- The packaging script installs dependencies, clears previous build artifacts, and runs PyInstaller in windowed mode.
+- Use the optional AppName parameter to generate a different executable name.
