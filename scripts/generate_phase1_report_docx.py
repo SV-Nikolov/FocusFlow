@@ -99,7 +99,7 @@ def build_report(doc: Document) -> None:
         "1) Project Setup: create a clean repository layout, dependency management, scripts, and source separation. "
         "2) Core Functionality: implement user authentication, task lifecycle controls, calendar task viewing, reminder CRUD, "
         "and dashboard statistics. 3) Unit Testing: create repeatable tests for major services and persistence adapters. "
-        "4) Documentation: maintain readable code comments, a run/build README, task artifacts, and this formal report."
+        "4) Documentation: maintain readable code comments, complete run/build instructions and this formal report."
     )
 
     add_heading(doc, "Instructions", 1)
@@ -107,17 +107,17 @@ def build_report(doc: Document) -> None:
     add_heading(doc, "Review the Phase I", 2)
     add_body(
         doc,
-        "Phase I requirements were reviewed from three sources: the project plan, project design, and Task 1 submission guidance. "
+        "Phase I requirements were reviewed from three sources: the project plan, project design, and assignment submission guidance. "
         "The plan and design established scope boundaries (desktop focus, core workflow priority, and security fundamentals), "
-        "while Task 1 defined expectations for implementation depth and report quality. The team used those sources to derive "
+        "while the assignment guidance defined expectations for implementation depth and report quality. The team used those sources to derive "
         "a concrete execution list: establish development setup, build high-value business flows first, verify correctness with "
         "tests, and record rationale in reusable documentation."
     )
     add_body(
         doc,
         "The grading rubric emphasizes not only feature delivery but also engineering discipline. As a result, Phase I was "
-        "organized into traceable workstreams. Repository organization and scripts satisfy setup quality. Service and UI work "
-        "satisfy core functionality. Automated tests satisfy reliability and correctness. Structured README and Task documentation "
+        "organized into traceable workstreams. Project organization and automation satisfy setup quality. Service and UI work "
+        "satisfy core functionality. Automated tests satisfy reliability and correctness. Structured runtime and submission documentation "
         "satisfy communication and maintainability. This review-first approach prevented ad hoc coding and improved alignment "
         "between code artifacts and grading criteria."
     )
@@ -155,7 +155,7 @@ def build_report(doc: Document) -> None:
     add_heading(doc, "Implement the Software", 2)
     add_body(
         doc,
-        "Phase I implementation was completed in incremental milestones. First, the team created package structure under src/focusflow, "
+        "Phase I implementation was completed in incremental milestones. First, the team created modular package structure, "
         "configured testing with pytest, and pinned dependencies in requirements.txt. Next, authentication and task modules were "
         "implemented with validation and custom exceptions. After core service behavior stabilized, persistent service bootstrapping was "
         "added with default SQLite storage and optional database URL override. Finally, the desktop interface was elevated from a static "
@@ -171,9 +171,9 @@ def build_report(doc: Document) -> None:
     )
     add_body(
         doc,
-        "Repository cleanup and reorganization were also completed to improve long-term maintainability. Documentation was grouped into "
+        "Project cleanup and reorganization were also completed to improve long-term maintainability. Documentation was grouped into "
         "project references and task-specific resources/submissions. Naming conventions were normalized for clarity. Build and integration "
-        "scripts were consolidated in scripts/. This cleanup addresses common capstone risks such as artifact sprawl, mixed naming, and "
+        "build and integration automation were consolidated. This cleanup addresses common capstone risks such as artifact sprawl, mixed naming, and "
         "difficulty onboarding teammates to file locations."
     )
     add_body(
@@ -201,8 +201,8 @@ def build_report(doc: Document) -> None:
     )
     add_body(
         doc,
-        "The repository was reorganized so that course resources and submissions are now separated cleanly. Project reference documents are "
-        "stored under Documentation/Project, while Task 1 materials are split between Resources and Submissions. This structure improves "
+        "Course resources and submission artifacts are now separated cleanly. Project reference documents are "
+        "grouped by purpose (project references, provided resources, and submission outputs). This structure improves "
         "navigation during grading and helps future phases avoid accidental edits to instructor-provided templates or rubrics."
     )
 
@@ -242,7 +242,7 @@ def build_report(doc: Document) -> None:
         doc,
         "Project setup quality is demonstrated by explicit tooling and structure decisions. The repository includes isolated source and test "
         "directories, deterministic dependency pins, startup entrypoints, bootstrap configuration controls, packaging scripts, and database test "
-        "profiles. Build and run commands are documented in README. Cache and local artifact ignores are configured to keep commits clean and "
+        "profiles. Build and run commands are documented in project run instructions. Cache and local artifact ignores are configured to keep commits clean and "
         "reviewable."
     )
     add_body(
@@ -284,7 +284,7 @@ def build_report(doc: Document) -> None:
     add_heading(doc, "Documentation Evidence", 1)
     add_body(
         doc,
-        "Documentation now exists at multiple levels. Inline docstrings communicate intent at module and class level. README describes run, storage, "
+        "Documentation now exists at multiple levels. Inline docstrings communicate intent at module and class level. Run instructions describe storage and "
         "and packaging paths. Task artifacts are stored in structured folders for grader navigation. This report connects implementation choices to "
         "requirements and rubric expectations, creating an auditable record of engineering decisions."
     )
@@ -292,7 +292,11 @@ def build_report(doc: Document) -> None:
         doc,
         "The use of explicit section headings matching the provided template improves consistency with assignment expectations. References are "
         "included to support technical choices and course planning sources. Overall, documentation now supports maintenance, onboarding, and grading "
-        "without requiring evaluators to reverse-engineer repository intent from code alone."
+        "without requiring evaluators to reverse-engineer project intent from code alone."
+    )
+    add_body(
+        doc,
+        "To support reviewers who may only receive this document, implementation details are described directly in the report: architecture, workflow rules, validation behavior, test strategy, and representative executable examples. Evaluation does not depend on external code access."
     )
 
     add_heading(doc, "Risk Management and Technical Constraints", 1)
@@ -309,7 +313,7 @@ def build_report(doc: Document) -> None:
         "A third risk involved feature coupling between GUI events and business rules. If UI code directly manages workflow logic, regression risk "
         "increases rapidly as features scale. The repository-service architecture mitigates this by centralizing validation and transition rules in "
         "testable services. A fourth risk was documentation drift where implementation changes are not reflected in assignment artifacts. The team "
-        "addressed this by updating README and task submissions in the same implementation cycle as feature updates."
+        "addressed this by updating run instructions and submission documents in the same implementation cycle as feature updates."
     )
     add_body(
         doc,
@@ -378,14 +382,14 @@ def build_report(doc: Document) -> None:
     add_heading(doc, "Rubric Alignment Summary", 1)
     add_body(
         doc,
-        "Project Setup (25 points): The repository now contains clear source/test/script/documentation separation, pinned dependencies, "
+        "Project Setup (25 points): The project now contains clear source/test/documentation separation, pinned dependencies, "
         "runtime bootstrap controls, version control history, and build scripts for Windows packaging. The environment setup is reproducible "
-        "and documented in README."
+        "and documented in this report and companion run instructions."
     )
     add_body(
         doc,
         "Core Functionality (25 points): Delivered functionality includes registration/login, task CRUD, task transitions, dashboard metrics, "
-        "calendar task visibility, reminder CRUD, and persistent storage integration. Code is modular and follows service-repository boundaries "
+        "calendar task visibility, reminder CRUD, and persistent storage integration. Code is modular and follows service-layer boundaries "
         "to reduce duplication."
     )
     add_body(
@@ -396,8 +400,8 @@ def build_report(doc: Document) -> None:
     )
     add_body(
         doc,
-        "Documentation (25 points): Codebase contains docstrings and structured exception messages; README provides runtime and build details; "
-        "Task 1 documentation is reorganized into clear resources and submissions folders; this report provides traceability between objectives, "
+        "Documentation (25 points): Codebase contains docstrings and structured exception messages; runtime and build details are documented; "
+        "assignment documentation is reorganized into clear resources and submissions folders; this report provides traceability between objectives, "
         "implementation, testing, and grading criteria."
     )
 
