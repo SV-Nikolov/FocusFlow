@@ -8,6 +8,7 @@ import secrets
 
 from .exceptions import ValidationError
 from .models import User
+from .repositories import InMemoryUserRepository, UserRepository
 
 
 class PasswordHasher:
@@ -45,24 +46,27 @@ class PasswordHasher:
 class AuthService:
     """In-memory user registration and login service for Phase I."""
 
-    def __init__(self, hasher: PasswordHasher | None = None) -> None:
+    def __init__(
+        self,
+        hasher: PasswordHasher | None = None,
+        user_repository: UserRepository | None = None,
+    ) -> None:
         self._hasher = hasher or PasswordHasher()
-        self._users_by_username: dict[str, User] = {}
+        self._users = user_repository or InMemoryUserRepository()
 
     def register_user(self, username: str, password: str, email: str | None = None) -> User:
         username = username.strip()
         if not username:
             raise ValidationError("Username is required.")
-        if username in self._users_by_username:
+        if self._users.get_by_username(username) is not None:
             raise ValidationError("Username already exists.")
 
         password_hash = self._hasher.hash_password(password)
         user = User(username=username, password_hash=password_hash, email=email)
-        self._users_by_username[username] = user
-        return user
+        return self._users.save(user)
 
     def authenticate_user(self, username: str, password: str) -> User | None:
-        user = self._users_by_username.get(username)
+        user = self._users.get_by_username(username)
         if user is None:
             return None
         if not self._hasher.verify_password(password, user.password_hash):
@@ -70,4 +74,4 @@ class AuthService:
         return user
 
     def get_user(self, username: str) -> User | None:
-        return self._users_by_username.get(username)
+        return self._users.get_by_username(username)

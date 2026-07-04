@@ -15,6 +15,8 @@ This Phase I implementation establishes a working software foundation aligned wi
 - Task status workflow with transition validation.
 - Overdue detection logic.
 - User data isolation checks for task access.
+- Repository abstraction to decouple service layer from storage layer.
+- MySQL-ready SQLAlchemy persistence adapters for users and tasks.
 
 3. Unit Testing
 - Authentication tests for hashing, duplicate users, password rules, and login outcomes.
@@ -29,11 +31,14 @@ This Phase I implementation establishes a working software foundation aligned wi
 - src/focusflow/models.py: domain entities and enums
 - src/focusflow/auth.py: password hashing and user authentication logic
 - src/focusflow/task_manager.py: task lifecycle and filtering logic
+- src/focusflow/repositories.py: repository protocols and in-memory adapters
+- src/focusflow/mysql_persistence.py: SQLAlchemy models and MySQL repository adapters
 - src/focusflow/exceptions.py: shared application exceptions
 - tests/test_auth.py: authentication unit tests
 - tests/test_task_manager.py: task management unit tests
 - pyproject.toml: test path and pythonpath configuration
 - requirements.txt: baseline dependencies
+- Documentation/Tasks/Task_1/Phase_1_Report_Draft.md: full draft report for Phase I submission
 
 ## How To Run Tests
 
@@ -46,4 +51,4 @@ This Phase I implementation establishes a working software foundation aligned wi
 ## Notes
 
 - The current Phase I implementation uses in-memory services for fast iterative development and testing.
-- Database-backed persistence and GUI integration can now be layered in subsequent phases while keeping the tested service APIs stable.
+- Database-backed persistence can now be enabled through SQLAlchemy repository adapters while keeping the tested service APIs stable.

@@ -6,6 +6,7 @@ from datetime import date, datetime, timezone
 
 from .exceptions import AuthorizationError, InvalidTransitionError, NotFoundError, ValidationError
 from .models import Task, TaskPriority, TaskStatus
+from .repositories import InMemoryTaskRepository, TaskRepository
 
 
 _ALLOWED_TRANSITIONS: dict[TaskStatus, set[TaskStatus]] = {
@@ -20,8 +21,8 @@ _ALLOWED_TRANSITIONS: dict[TaskStatus, set[TaskStatus]] = {
 class TaskManager:
     """In-memory task CRUD and workflow transitions."""
 
-    def __init__(self) -> None:
-        self._tasks_by_id: dict[str, Task] = {}
+    def __init__(self, task_repository: TaskRepository | None = None) -> None:
+        self._tasks = task_repository or InMemoryTaskRepository()
 
     def create_task(
         self,
@@ -47,11 +48,10 @@ class TaskManager:
             priority=priority,
             label=label,
         )
-        self._tasks_by_id[task.task_id] = task
-        return task
+        return self._tasks.save(task)
 
     def get_task(self, *, task_id: str, user_id: str) -> Task:
-        task = self._tasks_by_id.get(task_id)
+        task = self._tasks.get_by_id(task_id)
         if task is None:
             raise NotFoundError("Task not found.")
         if task.user_id != user_id:
@@ -85,11 +85,11 @@ class TaskManager:
             task.priority = priority
         if label is not None:
             task.label = label
-        return task
+        return self._tasks.save(task)
 
     def delete_task(self, *, task_id: str, user_id: str) -> None:
         task = self.get_task(task_id=task_id, user_id=user_id)
-        del self._tasks_by_id[task.task_id]
+        self._tasks.delete(task.task_id)
 
     def transition_status(self, *, task_id: str, user_id: str, new_status: TaskStatus) -> Task:
         task = self.get_task(task_id=task_id, user_id=user_id)
@@ -108,7 +108,7 @@ class TaskManager:
             task.started_at = now
         if new_status == TaskStatus.COMPLETED:
             task.completed_at = now
-        return task
+        return self._tasks.save(task)
 
     def list_tasks(
         self,
@@ -117,7 +117,7 @@ class TaskManager:
         status: TaskStatus | None = None,
         label: str | None = None,
     ) -> list[Task]:
-        tasks = [task for task in self._tasks_by_id.values() if task.user_id == user_id]
+        tasks = [task for task in self._tasks.list_all() if task.user_id == user_id]
         if status is not None:
             tasks = [task for task in tasks if task.status == status]
         if label is not None:
@@ -126,10 +126,11 @@ class TaskManager:
 
     def mark_overdue(self, *, reference_date: date) -> int:
         count = 0
-        for task in self._tasks_by_id.values():
+        for task in self._tasks.list_all():
             if task.status == TaskStatus.COMPLETED:
                 continue
             if task.due_date < reference_date and task.status != TaskStatus.OVERDUE:
                 task.status = TaskStatus.OVERDUE
+                self._tasks.save(task)
                 count += 1
         return count
