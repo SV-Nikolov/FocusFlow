@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from focusflow.exceptions import AuthorizationError, InvalidTransitionError, ValidationError
 from focusflow.models import TaskPriority, TaskStatus
@@ -80,3 +80,47 @@ def test_mark_overdue_updates_status() -> None:
 
     assert changed == 1
     assert manager.get_task(task_id=task.task_id, user_id="user-1").status == TaskStatus.OVERDUE
+
+
+def test_task_time_tracking_when_completed() -> None:
+    """
+    Verifies that completing a task records the total time spent.
+
+    This test simulates a task that has been in progress for
+    approximately 30 minutes before being marked as completed.
+    The expected behavior is that the task status changes to
+    COMPLETED and the total_minutes_spent field is updated.
+    """
+
+    manager = TaskManager()
+
+    # Create a new task for testing.
+    task = manager.create_task(
+        user_id="user-1",
+        title="Timed task",
+        due_date=date.today(),
+    )
+
+    # Start the task so it can legally transition to COMPLETED.
+    started = manager.transition_status(
+        task_id=task.task_id,
+        user_id="user-1",
+        new_status=TaskStatus.IN_PROGRESS,
+    )
+
+    # Simulate that the task started 30 minutes ago.
+    started.started_at = datetime.now(timezone.utc) - timedelta(minutes=30)
+    manager._tasks.save(started)
+
+    # Complete the task.
+    completed = manager.transition_status(
+        task_id=task.task_id,
+        user_id="user-1",
+        new_status=TaskStatus.COMPLETED,
+    )
+
+    # Verify the task status changed successfully.
+    assert completed.status == TaskStatus.COMPLETED
+
+    # Verify the total tracked work time is at least 30 minutes.
+    assert completed.total_minutes_spent >= 30

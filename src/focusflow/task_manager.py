@@ -108,6 +108,14 @@ class TaskManager:
             task.started_at = now
         if new_status == TaskStatus.COMPLETED:
             task.completed_at = now
+
+            # Calculate the total time spent on the task before marking it as completed.
+            if task.started_at is not None:
+                # Calculate the elapsed work time in whole minutes.
+                elapsed_minutes = int((now - task.started_at).total_seconds() // 60)
+
+                # Prevent negative values and accumulate the total work time.
+                task.total_minutes_spent += max(elapsed_minutes, 0)
         return self._tasks.save(task)
 
     def list_tasks(
