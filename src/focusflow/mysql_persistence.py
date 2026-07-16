@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Integer, String, Text, create_engine, select
+from sqlalchemy import Date, DateTime, Integer, String, Text, create_engine, inspect, select, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 from .models import Reminder, Task, TaskPriority, TaskStatus, User
@@ -19,12 +19,35 @@ class Base(DeclarativeBase):
 class UserRow(Base):
     __tablename__ = "users"
 
-    user_id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-
+    user_id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+    )
+    username: Mapped[str] = mapped_column(
+        String(50),
+        unique=True,
+        nullable=False,
+    )
+    password_hash: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+    security_question: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+    security_answer_hash: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+    email: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+    )
 
 class TaskRow(Base):
     __tablename__ = "tasks"
@@ -75,6 +98,29 @@ class SqlAlchemyContext:
 
     def create_schema(self) -> None:
         Base.metadata.create_all(self.engine)
+        self._upgrade_user_security_columns()
+
+    def _upgrade_user_security_columns(self) -> None:
+        """Add recovery columns to databases created before this feature existed."""
+        inspector = inspect(self.engine)
+        if "users" not in inspector.get_table_names():
+            return
+
+        column_names = {column["name"] for column in inspector.get_columns("users")}
+        statements: list[str] = []
+        if "security_question" not in column_names:
+            statements.append(
+                "ALTER TABLE users ADD COLUMN security_question VARCHAR(255) NOT NULL DEFAULT ''"
+            )
+        if "security_answer_hash" not in column_names:
+            statements.append(
+                "ALTER TABLE users ADD COLUMN security_answer_hash VARCHAR(255) NOT NULL DEFAULT ''"
+            )
+
+        if statements:
+            with self.engine.begin() as connection:
+                for statement in statements:
+                    connection.execute(text(statement))
 
     def session(self) -> Session:
         return self._session_factory()
@@ -98,6 +144,8 @@ class SqlUserRepository(UserRepository):
             row.username = user.username
             row.password_hash = user.password_hash
             row.email = user.email
+            row.security_question = user.security_question
+            row.security_answer_hash = user.security_answer_hash
             row.created_at = user.created_at
             session.commit()
             return _user_from_row(row)
@@ -185,6 +233,8 @@ def _user_from_row(row: UserRow) -> User:
         user_id=row.user_id,
         username=row.username,
         password_hash=row.password_hash,
+        security_question=row.security_question,
+        security_answer_hash=row.security_answer_hash,
         email=row.email,
         created_at=row.created_at,
     )

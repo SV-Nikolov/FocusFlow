@@ -1,4 +1,4 @@
-"""Domain models for FocusFlow Phase I."""
+"""Domain models for FocusFlow."""
 
 from __future__ import annotations
 
@@ -26,6 +26,8 @@ class TaskPriority(str, Enum):
 class User:
     username: str
     password_hash: str
+    security_question: str = ""
+    security_answer_hash: str = ""
     email: str | None = None
     user_id: str = field(default_factory=lambda: str(uuid4()))
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDateEdit,
     QDateTimeEdit,
+    QDialog,
     QFormLayout,
     QFrame,
     QGridLayout,
@@ -93,6 +94,8 @@ class FocusFlowWindow(QMainWindow):
         self._register_username: QLineEdit | None = None
         self._register_password: QLineEdit | None = None
         self._register_email: QLineEdit | None = None
+        self._register_security_question: QComboBox | None = None
+        self._register_security_answer: QLineEdit | None = None
 
         self._pages = QStackedWidget(self)
         self.setWindowTitle("FocusFlow")
@@ -221,15 +224,33 @@ class FocusFlowWindow(QMainWindow):
         login_button.clicked.connect(self._on_login_clicked)
         login_panel.layout().addWidget(login_button)
 
+        forgot_password_button = QPushButton("Forgot Password?")
+        forgot_password_button.clicked.connect(self._open_password_recovery_dialog)
+        login_panel.layout().addWidget(forgot_password_button)
+
         register_panel = self._panel("Create Account")
         register_form = QFormLayout()
         self._register_username = QLineEdit()
         self._register_password = QLineEdit()
         self._register_password.setEchoMode(QLineEdit.EchoMode.Password)
         self._register_email = QLineEdit()
+        self._register_security_question = QComboBox()
+        self._register_security_question.addItems(
+            [
+                "What was the name of your first pet?",
+                "What city were you born in?",
+                "What was the name of your first school?",
+                "What was the make of your first car?",
+                "What was your childhood nickname?",
+            ]
+        )
+        self._register_security_answer = QLineEdit()
+        self._register_security_answer.setEchoMode(QLineEdit.EchoMode.Password)
         register_form.addRow("Username", self._register_username)
         register_form.addRow("Password", self._register_password)
         register_form.addRow("Email", self._register_email)
+        register_form.addRow("Security Question", self._register_security_question)
+        register_form.addRow("Security Answer", self._register_security_answer)
         register_panel.layout().addLayout(register_form)
 
         register_button = QPushButton("Register")
@@ -522,21 +543,117 @@ class FocusFlowWindow(QMainWindow):
         self.refresh_view()
 
     def _on_register_clicked(self) -> None:
-        if self._register_username is None or self._register_password is None or self._register_email is None:
+        if (
+            self._register_username is None
+            or self._register_password is None
+            or self._register_email is None
+            or self._register_security_question is None
+            or self._register_security_answer is None
+        ):
             return
+
         username = self._register_username.text().strip()
         password = self._register_password.text()
         email = self._register_email.text().strip() or None
+        security_question = self._register_security_question.currentText()
+        security_answer = self._register_security_answer.text()
+
         try:
-            self._services.auth.register_user(username, password, email)
+            self._services.auth.register_user(
+                username=username,
+                password=password,
+                security_question=security_question,
+                security_answer=security_answer,
+                email=email,
+            )
         except FocusFlowError as exc:
             self._show_error(str(exc))
             return
+
         self._show_info("Account created. You can now log in.")
         if self._login_username is not None:
             self._login_username.setText(username)
-        if self._register_password is not None:
-            self._register_password.clear()
+        self._register_password.clear()
+        self._register_security_answer.clear()
+
+    def _open_password_recovery_dialog(self) -> None:
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Recover FocusFlow Account")
+        dialog.setMinimumWidth(460)
+
+        username_input = QLineEdit()
+        question_label = QLabel("Enter your username, then select Find Question.")
+        question_label.setWordWrap(True)
+        answer_input = QLineEdit()
+        answer_input.setEchoMode(QLineEdit.EchoMode.Password)
+        new_password_input = QLineEdit()
+        new_password_input.setEchoMode(QLineEdit.EchoMode.Password)
+        confirm_password_input = QLineEdit()
+        confirm_password_input.setEchoMode(QLineEdit.EchoMode.Password)
+
+        form = QFormLayout()
+        form.addRow("Username", username_input)
+        form.addRow("Security Question", question_label)
+        form.addRow("Security Answer", answer_input)
+        form.addRow("New Password", new_password_input)
+        form.addRow("Confirm Password", confirm_password_input)
+
+        find_button = QPushButton("Find Question")
+        reset_button = QPushButton("Reset Password")
+        cancel_button = QPushButton("Cancel")
+
+        def find_question() -> None:
+            username = username_input.text().strip()
+            if not username:
+                QMessageBox.warning(dialog, "Recovery Error", "Enter your username.")
+                return
+            try:
+                question_label.setText(
+                    self._services.auth.get_security_question(username)
+                )
+            except FocusFlowError as exc:
+                QMessageBox.warning(dialog, "Recovery Error", str(exc))
+
+        def reset_password() -> None:
+            username = username_input.text().strip()
+            new_password = new_password_input.text()
+            if new_password != confirm_password_input.text():
+                QMessageBox.warning(
+                    dialog, "Recovery Error", "The new passwords do not match."
+                )
+                return
+            try:
+                self._services.auth.reset_password(
+                    username=username,
+                    security_answer=answer_input.text(),
+                    new_password=new_password,
+                )
+            except FocusFlowError as exc:
+                QMessageBox.warning(dialog, "Recovery Error", str(exc))
+                return
+
+            QMessageBox.information(
+                dialog, "Password Reset", "Your password was reset successfully."
+            )
+            if self._login_username is not None:
+                self._login_username.setText(username)
+            if self._login_password is not None:
+                self._login_password.clear()
+            dialog.accept()
+
+        find_button.clicked.connect(find_question)
+        reset_button.clicked.connect(reset_password)
+        cancel_button.clicked.connect(dialog.reject)
+
+        actions = QHBoxLayout()
+        actions.addWidget(find_button)
+        actions.addWidget(reset_button)
+        actions.addWidget(cancel_button)
+
+        layout = QVBoxLayout(dialog)
+        layout.addLayout(form)
+        layout.addLayout(actions)
+        dialog.exec()
 
     def _on_logout_clicked(self) -> None:
         self._current_user = None
