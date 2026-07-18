@@ -27,6 +27,8 @@ class User:
     username: str
     password_hash: str
     email: str | None = None
+    security_question: str | None = None
+    security_answer_hash: str | None = None
     user_id: str = field(default_factory=lambda: str(uuid4()))
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 

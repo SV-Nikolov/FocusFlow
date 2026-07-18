@@ -23,6 +23,8 @@ class UserRow(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    security_question: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    security_answer_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
@@ -98,6 +100,8 @@ class SqlUserRepository(UserRepository):
             row.username = user.username
             row.password_hash = user.password_hash
             row.email = user.email
+            row.security_question = user.security_question
+            row.security_answer_hash = user.security_answer_hash
             row.created_at = user.created_at
             session.commit()
             return _user_from_row(row)
@@ -186,6 +190,8 @@ def _user_from_row(row: UserRow) -> User:
         username=row.username,
         password_hash=row.password_hash,
         email=row.email,
+        security_question=row.security_question,
+        security_answer_hash=row.security_answer_hash,
         created_at=row.created_at,
     )
 
